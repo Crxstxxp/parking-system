@@ -1,10 +1,11 @@
 import React from 'react';
 import AppLayout from './Layouts/AppLayout';
+import Sidebar from './Layouts/SidebarLayout';
 
 export default function Home() {
     return (
-        <AppLayout>
-            <h1 className="text-3xl font-bold">Bienvenido al Sistema de Parking</h1>
-        </AppLayout>
+        <Sidebar>
+
+        </Sidebar>
     );
 }
