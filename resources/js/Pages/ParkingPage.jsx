@@ -46,7 +46,6 @@ export default function ParkingPage({ data, vehicleTypes }) {
     const [form, setForm] = useState({
         placa: "",
         entrada: formatDate(new Date()),
-        salida: formatDate(new Date(Date.now() + 3 * 60 * 60 * 1000)),
         id_tipo: "",
     });
 
@@ -77,9 +76,6 @@ export default function ParkingPage({ data, vehicleTypes }) {
                 setForm({
                     placa: "",
                     entrada: formatDate(new Date()),
-                    salida: formatDate(
-                        new Date(Date.now() + 3 * 60 * 60 * 1000)
-                    ),
                     id_tipo: "",
                 });
             },
@@ -88,6 +84,20 @@ export default function ParkingPage({ data, vehicleTypes }) {
             },
         });
     };
+
+    const registrarSalida = (id) => {
+    const time = formatDate(new Date());
+
+    router.post(`/parking/${id}`, { salida: time }, {
+        onSuccess: () => {
+            alert("Salida registrada correctamente.");
+            router.reload();
+        },
+        onError: (err) => {
+            console.error("Error al registrar salida", err);
+        }
+    });
+};
 
     const openExportDialog = (tipo) => {
         setTipoExportacion(tipo);
@@ -198,7 +208,22 @@ export default function ParkingPage({ data, vehicleTypes }) {
                                 <TableCell>{item.id}</TableCell>
                                 <TableCell>{item.placa}</TableCell>
                                 <TableCell>{item.entrada}</TableCell>
-                                <TableCell>{item.salida}</TableCell>
+                                <TableCell>
+                                    {item.salida ? (
+                                        item.salida
+                                    ) : (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            size="small"
+                                            onClick={() =>
+                                                registrarSalida(item.id)
+                                            }
+                                        >
+                                            Registrar salida
+                                        </Button>
+                                    )}
+                                </TableCell>
                                 <TableCell>
                                     {item.vehicle_type.nombre}
                                 </TableCell>
@@ -235,13 +260,6 @@ export default function ParkingPage({ data, vehicleTypes }) {
                         label="Entrada"
                         name="entrada"
                         value={form.entrada}
-                        onChange={handleChange}
-                        fullWidth
-                    />
-                    <TextField
-                        label="Salida"
-                        name="salida"
-                        value={form.salida}
                         onChange={handleChange}
                         fullWidth
                     />

@@ -16,7 +16,6 @@ class CreateParkingRegisterRequest extends FormRequest
         return [
             'placa' => 'required|string|max:10',
             'entrada' => 'required|date',
-            'salida' => 'required|date|after_or_equal:entrada',
             'id_tipo' => 'required|integer|exists:vehicle_types,id_tipo',
         ];
     }

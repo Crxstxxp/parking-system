@@ -30,4 +30,15 @@ class ParkingController extends Controller
             return redirect()->route('parking.index');
         });
     }
+
+    public function update(int $id, Request $request)
+    {
+        return DB::transaction(function () use ($request, $id) {
+            $parking = Parking::findOrFail($id);
+            $parking->update([
+                'salida' => $request->salida,
+            ]);
+            return redirect()->route('parking.index');
+        });
+    }
 }
