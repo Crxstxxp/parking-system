@@ -8,8 +8,8 @@ const SidebarLayout = ({ children }) => {
     const { url } = usePage();
 
     const navItems = [
-        { name: 'Usuarios', href: '/parking' },
-        { name: 'Productos', href: '/vehicles' },
+        { name: 'Estacionamiento', href: '/parking' },
+        { name: 'Tipos de vehiculos', href: '/vehicles' },
     ];
 
     return (

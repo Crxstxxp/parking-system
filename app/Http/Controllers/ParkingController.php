@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
 use Illuminate\Http\Request;
 use App\Http\Requests\CreateParkingRegisterRequest;
 use Inertia\Inertia;
 use App\Models\{Parking, VehicleTypes};
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class ParkingController extends Controller
 {

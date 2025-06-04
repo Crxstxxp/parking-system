@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Parking extends Model
 {
     protected $table = 'parking_records';
-    public $timestamps = false;
 
     protected $fillable = [
         'placa',

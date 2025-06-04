@@ -20,8 +20,14 @@ import {
     Typography,
     Select,
     MenuItem,
+    Stepper,
+    Step,
+    StepLabel,
 } from "@mui/material";
 import { router } from "@inertiajs/react";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 const formatDate = (dateInput) => {
     const date = new Date(dateInput);
@@ -33,6 +39,8 @@ const formatDate = (dateInput) => {
     )}`;
 };
 
+const steps = ["Tipo de exportación", "Resumen"];
+
 export default function ParkingPage({ data, vehicleTypes }) {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
@@ -41,6 +49,15 @@ export default function ParkingPage({ data, vehicleTypes }) {
         salida: formatDate(new Date(Date.now() + 3 * 60 * 60 * 1000)),
         id_tipo: "",
     });
+
+    const [filtroDesde, setFiltroDesde] = useState(null);
+    const [filtroHasta, setFiltroHasta] = useState(null);
+
+    const [openExportOptions, setOpenExportOptions] = useState(false);
+    const [tipoExportacion, setTipoExportacion] = useState("pdf");
+    const [exportType, setExportType] = useState("rango");
+    const [groupBy, setGroupBy] = useState("horas");
+    const [activeStep, setActiveStep] = useState(0);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -72,6 +89,60 @@ export default function ParkingPage({ data, vehicleTypes }) {
         });
     };
 
+    const openExportDialog = (tipo) => {
+        setTipoExportacion(tipo);
+        setExportType("rango");
+        setGroupBy("horas");
+        setFiltroDesde(null);
+        setFiltroHasta(null);
+        setActiveStep(0);
+        setOpenExportOptions(true);
+    };
+
+    const handleExport = () => {
+        if (exportType === "rango" && (!filtroDesde || !filtroHasta)) {
+            alert("Selecciona un rango de fechas.");
+            return;
+        }
+
+        let params = new URLSearchParams({
+            tipo: exportType,
+            agrupar: groupBy,
+        });
+
+        if (filtroDesde && filtroHasta) {
+            params.append("desde", filtroDesde.toISOString());
+            params.append("hasta", filtroHasta.toISOString());
+        }
+
+        window.open(
+            `/export/${tipoExportacion}?${params.toString()}`,
+            "_blank"
+        );
+        setOpenExportOptions(false);
+    };
+
+    const handleNext = () => {
+        if (activeStep === 0) {
+            setActiveStep(1);
+        } else if (activeStep === 1) {
+            if (!filtroDesde || !filtroHasta) {
+                alert("Selecciona el rango de fechas/horas para continuar.");
+                return;
+            }
+            if (filtroDesde > filtroHasta) {
+                alert(
+                    "La fecha/hora 'Desde' debe ser menor o igual a 'Hasta'."
+                );
+                return;
+            }
+            handleExport();
+        }
+    };
+
+    const handleBack = () => {
+        if (activeStep > 0) setActiveStep(activeStep - 1);
+    };
     return (
         <SidebarLayout>
             <Box mb={2} display="flex" justifyContent="space-between">
@@ -91,6 +162,7 @@ export default function ParkingPage({ data, vehicleTypes }) {
                         color="error"
                         startIcon={<PictureAsPdfIcon />}
                         sx={{ mr: 1 }}
+                        onClick={() => openExportDialog("pdf")}
                     >
                         Exportar PDF
                     </Button>
@@ -101,6 +173,7 @@ export default function ParkingPage({ data, vehicleTypes }) {
                             "&:hover": { backgroundColor: "#155D35" },
                         }}
                         startIcon={<GridOnIcon />}
+                        onClick={() => openExportDialog("excel")}
                     >
                         Exportar Excel
                     </Button>
@@ -126,7 +199,9 @@ export default function ParkingPage({ data, vehicleTypes }) {
                                 <TableCell>{item.placa}</TableCell>
                                 <TableCell>{item.entrada}</TableCell>
                                 <TableCell>{item.salida}</TableCell>
-                                <TableCell>{item.vehicle_type.nombre}</TableCell>
+                                <TableCell>
+                                    {item.vehicle_type.nombre}
+                                </TableCell>
                                 <TableCell>{`$${item.vehicle_type.costo}`}</TableCell>
                             </TableRow>
                         ))}
@@ -134,7 +209,12 @@ export default function ParkingPage({ data, vehicleTypes }) {
                 </Table>
             </TableContainer>
 
-            <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={open}
+                onClose={() => setOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>Nuevo Registro</DialogTitle>
                 <DialogContent
                     sx={{
@@ -188,6 +268,178 @@ export default function ParkingPage({ data, vehicleTypes }) {
                     <Button variant="contained" onClick={handleAdd}>
                         Guardar
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={openExportOptions}
+                onClose={() => setOpenExportOptions(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Exportar datos</DialogTitle>
+                <DialogContent>
+                    <Stepper activeStep={activeStep} alternativeLabel>
+                        {steps.map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
+
+                    <Box mt={3} display="flex" flexDirection="column" gap={2}>
+                        {activeStep === 0 && (
+                            <>
+                                <LocalizationProvider
+                                    dateAdapter={AdapterDateFns}
+                                >
+                                    {exportType === "rango" ? (
+                                        <>
+                                            <DateTimePicker
+                                                label="Desde"
+                                                value={filtroDesde}
+                                                onChange={setFiltroDesde}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                    />
+                                                )}
+                                            />
+                                            <DateTimePicker
+                                                label="Hasta"
+                                                value={filtroHasta}
+                                                onChange={setFiltroHasta}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                    />
+                                                )}
+                                            />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <DateTimePicker
+                                                label="Hora desde (hoy)"
+                                                value={filtroDesde}
+                                                onChange={(val) => {
+                                                    if (!val) return;
+                                                    const hoy = new Date();
+                                                    val.setFullYear(
+                                                        hoy.getFullYear(),
+                                                        hoy.getMonth(),
+                                                        hoy.getDate()
+                                                    );
+                                                    setFiltroDesde(val);
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                    />
+                                                )}
+                                            />
+                                            <DateTimePicker
+                                                label="Hora hasta (hoy)"
+                                                value={filtroHasta}
+                                                onChange={(val) => {
+                                                    if (!val) return;
+                                                    const hoy = new Date();
+                                                    val.setFullYear(
+                                                        hoy.getFullYear(),
+                                                        hoy.getMonth(),
+                                                        hoy.getDate()
+                                                    );
+                                                    setFiltroHasta(val);
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                    />
+                                                )}
+                                            />
+                                        </>
+                                    )}
+                                </LocalizationProvider>
+                            </>
+                        )}
+
+                        {activeStep === 1 && (
+                            <>
+                                <Typography
+                                    variant="subtitle1"
+                                    fontWeight="bold"
+                                >
+                                    Resumen
+                                </Typography>
+                                <Typography>
+                                    Tipo de exportación:{" "}
+                                    <b>
+                                        {exportType === "hoy"
+                                            ? "Por horas (solo hoy)"
+                                            : "Por rango de días"}
+                                    </b>
+                                </Typography>
+
+                                {filtroDesde && filtroHasta ? (
+                                    <Typography>
+                                        Desde:{" "}
+                                        <b>{filtroDesde.toLocaleString()}</b>
+                                        <br />
+                                        Hasta:{" "}
+                                        <b>{filtroHasta.toLocaleString()}</b>
+                                    </Typography>
+                                ) : (
+                                    <Typography color="error">
+                                        Faltan datos para el rango.
+                                    </Typography>
+                                )}
+
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                >
+                                    Esta opción agrupará los datos dentro del
+                                    rango seleccionado.
+                                </Typography>
+                            </>
+                        )}
+                    </Box>
+                </DialogContent>
+
+                <DialogActions>
+                    {activeStep > 0 && (
+                        <Button onClick={handleBack}>Atrás</Button>
+                    )}
+
+                    {activeStep < steps.length - 1 ? (
+                        <Button
+                            variant="contained"
+                            onClick={() => {
+                                if (!filtroDesde || !filtroHasta) {
+                                    alert(
+                                        "Selecciona el rango de fechas/horas."
+                                    );
+                                    return;
+                                }
+                                if (filtroDesde > filtroHasta) {
+                                    alert(
+                                        "La fecha/hora 'Desde' debe ser menor o igual a 'Hasta'."
+                                    );
+                                    return;
+                                }
+                                setActiveStep((prev) => prev + 1);
+                            }}
+                        >
+                            Siguiente
+                        </Button>
+                    ) : (
+                        <Button variant="contained" onClick={handleExport}>
+                            Descargar
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </SidebarLayout>
