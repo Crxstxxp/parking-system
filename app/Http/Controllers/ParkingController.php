@@ -27,28 +27,8 @@ class ParkingController extends Controller
     public function store(CreateParkingRegisterRequest $request)
     {
         return DB::transaction(function () use ($request) {
-
-            $data = $this->getParkingData($request->validated());
-
-            Parking::create($data);
+            Parking::create($request->validated());
             return redirect()->route('parking.index');
         });
     }
-
-    private function getParkingData(array $data)
-    {
-        if (!isset($data['id_tipo'])) {
-            throw new Exception('El tipo de vehículo es requerido');
-        }
-
-        $value = match ($data['id_tipo']) {
-            1 => 0,
-            2 => 1,
-            3 => 3,
-            default => throw new Exception('Tipo de vehículo inválido'),
-        };
-
-        return array_merge($data, ['costo' => $value]);
-    }
-
 }

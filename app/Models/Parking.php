@@ -13,8 +13,7 @@ class Parking extends Model
         'placa',
         'entrada',
         'salida',
-        'id_tipo',
-        'costo',
+        'id_tipo'
     ];
 
     public function vehicleType()

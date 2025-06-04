@@ -23,7 +23,6 @@ import {
 } from "@mui/material";
 import { router } from "@inertiajs/react";
 
-// Utilidad para formatear fecha a "YYYY-MM-DD HH:mm:ss"
 const formatDate = (dateInput) => {
     const date = new Date(dateInput);
     const pad = (n) => String(n).padStart(2, "0");
@@ -128,7 +127,7 @@ export default function ParkingPage({ data, vehicleTypes }) {
                                 <TableCell>{item.entrada}</TableCell>
                                 <TableCell>{item.salida}</TableCell>
                                 <TableCell>{item.vehicle_type.nombre}</TableCell>
-                                <TableCell>{item.costo}</TableCell>
+                                <TableCell>{`$${item.vehicle_type.costo}`}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

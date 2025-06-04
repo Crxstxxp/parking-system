@@ -9,7 +9,7 @@ class VehicleTypes extends Model
     protected $table = 'vehicle_types';
     public $timestamps = false;
 
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre', 'costo'];
 
     public function parkings()
     {
